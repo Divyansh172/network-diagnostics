@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Network Diagnostics Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 100px;
+            padding: 12px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .speed-results {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .speed-metric {
+            text-align: center;
+            padding: 20px 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .speed-metric-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .speed-metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .speed-metric-unit {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: #5568d3;
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:active {
+            background: #38a169;
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status-box {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .log-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: #999;
+            margin-right: 10px;
+        }
+
+        .log-success { color: #48bb78; }
+        .log-error { color: #f56565; }
+        .log-warning { color: #ed8936; }
+        .log-info { color: #4299e1; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .profile-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .profile-selector select {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .profile-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+        }
+
+        .ip-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .ip-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .ip-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        @media (max-width: 480px) {
+            .speed-results {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 Network Diagnostics Pro</h1>
+            <p>Mobile Edition</p>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('speed')">Speed Test</button>
+                <button class="tab" onclick="switchTab('vpn')">VPN Check</button>
+                <button class="tab" onclick="switchTab('full')">Full Test</button>
+            </div>
+
+            <!-- Speed Test Tab -->
+            <div id="speed-tab" class="tab-content active">
+                <div class="card-header">
+                    <span>⚡</span> Internet Speed Test
+                </div>
+
+                <div class="speed-results">
+                    <div class="speed-metric">
+                        <div class="speed-metric-label">Download</div>
+                        <div class="speed-metric-value" id="download-speed">--</div>
+                        <div class="speed-metric-unit">Mbps</div>
+                    </div>
+                    <div class="speed-metric">
+                        <div class="speed-metric-label">Upload</div>
+                        <div class="speed-metric-value" id="upload-speed">--</div>
+                        <div class="speed-metric-unit">Mbps</div>
+                    </div>
+                    <div class="speed-metric">
+                        <div class="speed-metric-label">Ping</div>
+                        <div class="speed-metric-value" id="ping-speed">--</div>
+                        <div class="speed-metric-unit">ms</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="speed-test-btn" onclick="runSpeedTest()">
+                    Run Speed Test
+                </button>
+
+                <div class="loading" id="speed-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Testing speed...</p>
+                </div>
+
+                <div id="speed-status"></div>
+            </div>
+
+            <!-- VPN Check Tab -->
+            <div id="vpn-tab" class="tab-content">
+                <div class="card-header">
+                    <span>🔒</span> VPN Connection
+                </div>
+
+                <div class="profile-selector">
+                    <select id="vpn-profile" onchange="loadProfile()">
+                        <option value="">Select Profile</option>
+                    </select>
+                    <button class="profile-btn" onclick="saveProfile()">💾</button>
+                    <button class="profile-btn" onclick="deleteProfile()">🗑</button>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Profile Name</label>
+                    <input type="text" class="input-field" id="profile-name" placeholder="My VPN">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">VPN Server/Domain</label>
+                    <input type="text" class="input-field" id="vpn-server" placeholder="vpn.example.com">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Expected IP Range</label>
+                    <input type="text" class="input-field" id="ip-range" placeholder="10.0.">
+                </div>
+
+                <button class="btn btn-secondary" id="vpn-test-btn" onclick="checkVPN()">
+                    Check VPN Connection
+                </button>
+
+                <div class="loading" id="vpn-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Checking VPN...</p>
+                </div>
+
+                <div class="ip-display" id="current-ip" style="display: none;">
+                    <div class="ip-label">Current IP Address</div>
+                    <div class="ip-value" id="ip-value">--</div>
+                </div>
+
+                <div id="vpn-status"></div>
+            </div>
+
+            <!-- Full Test Tab -->
+            <div id="full-tab" class="tab-content">
+                <div class="card-header">
+                    <span>📊</span> Full Diagnostics
+                </div>
+
+                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                    Run comprehensive tests on both internet speed and VPN connection.
+                </p>
+
+                <button class="btn btn-primary" id="full-test-btn" onclick="runFullTest()">
+                    Run Full Diagnostics
+                </button>
+
+                <div class="loading" id="full-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Running diagnostics...</p>
+                </div>
+
+                <div class="log-box" id="log-box" style="display: none;"></div>
+
+                <button class="btn" style="background: #4299e1; color: white; margin-top: 10px; display: none;" id="export-btn" onclick="exportResults()">
+                    📄 Export Results
+                </button>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: white; margin-top: 20px; font-size: 12px; opacity: 0.8;">
+            Network Diagnostics Pro v1.0<br>
+            Tap "Add to Home Screen" to install
+        </div>
+    </div>
+
+    <script>
+        let logs = [];
+        let vpnProfiles = {};
+
+        // Load profiles from localStorage
+        function loadProfiles() {
+            const saved = localStorage.getItem('vpnProfiles');
+            if (saved) {
+                vpnProfiles = JSON.parse(saved);
+                updateProfileList();
+            }
+        }
+
+        function updateProfileList() {
+            const select = document.getElementById('vpn-profile');
+            select.innerHTML = '<option value="">Select Profile</option>';
+            for (let name in vpnProfiles) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            }
+        }
+
+        function loadProfile() {
+            const name = document.getElementById('vpn-profile').value;
+            if (name && vpnProfiles[name]) {
+                const profile = vpnProfiles[name];
+                document.getElementById('profile-name').value = name;
+                document.getElementById('vpn-server').value = profile.server || '';
+                document.getElementById('ip-range').value = profile.ipRange || '';
+            }
+        }
+
+        function saveProfile() {
+            const name = document.getElementById('profile-name').value.trim();
+            if (!name) {
+                alert('Please enter a profile name');
+                return;
+            }
+
+            vpnProfiles[name] = {
+                server: document.getElementById('vpn-server').value.trim(),
+                ipRange: document.getElementById('ip-range').value.trim()
+            };
+
+            localStorage.setItem('vpnProfiles', JSON.stringify(vpnProfiles));
+            updateProfileList();
+            document.getElementById('vpn-profile').value = name;
+            alert('Profile saved!');
+        }
+
+        function deleteProfile() {
+            const name = document.getElementById('vpn-profile').value;
+            if (!name) {
+                alert('Please select a profile to delete');
+                return;
+            }
+
+            if (confirm(`Delete profile "${name}"?`)) {
+                delete vpnProfiles[name];
+                localStorage.setItem('vpnProfiles', JSON.stringify(vpnProfiles));
+                updateProfileList();
+                document.getElementById('profile-name').value = '';
+                document.getElementById('vpn-server').value = '';
+                document.getElementById('ip-range').value = '';
+                alert('Profile deleted!');
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+
+        function showLoading(id, show) {
+            document.getElementById(id).classList.toggle('active', show);
+        }
+
+        function showStatus(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="status-box status-${type}">${message}</div>`;
+        }
+
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const logBox = document.getElementById('log-box');
+            logBox.style.display = 'block';
+            document.getElementById('export-btn').style.display = 'block';
+            
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span><span class="log-${type}">${message}</span>`;
+            logBox.appendChild(entry);
+            logBox.scrollTop = logBox.scrollHeight;
+            
+            logs.push(`[${time}] ${message}`);
+        }
+
+        async function runSpeedTest() {
+            const btn = document.getElementById('speed-test-btn');
+            btn.disabled = true;
+            showLoading('speed-loading', true);
+            document.getElementById('speed-status').innerHTML = '';
+
+            try {
+                // Ping test
+                document.getElementById('ping-speed').textContent = '...';
+                const pingStart = performance.now();
+                await fetch('https://www.google.com', { mode: 'no-cors' });
+                const ping = Math.round(performance.now() - pingStart);
+                document.getElementById('ping-speed').textContent = ping;
+
+                // Download test
+                document.getElementById('download-speed').textContent = '...';
+                const downloadStart = performance.now();
+                const downloadResponse = await fetch('https://speed.cloudflare.com/__down?bytes=10000000');
+                const downloadBlob = await downloadResponse.blob();
+                const downloadTime = (performance.now() - downloadStart) / 1000;
+                const downloadSpeed = ((downloadBlob.size * 8) / downloadTime / 1000000).toFixed(2);
+                document.getElementById('download-speed').textContent = downloadSpeed;
+
+                // Upload test (simulated with smaller size)
+                document.getElementById('upload-speed').textContent = '...';
+                const uploadData = new Blob([new ArrayBuffer(1000000)]); // 1MB
+                const uploadStart = performance.now();
+                await fetch('https://httpbin.org/post', {
+                    method: 'POST',
+                    body: uploadData
+                });
+                const uploadTime = (performance.now() - uploadStart) / 1000;
+                const uploadSpeed = ((uploadData.size * 8) / uploadTime / 1000000).toFixed(2);
+                document.getElementById('upload-speed').textContent = uploadSpeed;
+
+                showStatus('speed-status', '✓ Speed test completed successfully!', 'success');
+            } catch (error) {
+                showStatus('speed-status', '✗ Speed test failed: ' + error.message, 'error');
+                document.getElementById('download-speed').textContent = 'Error';
+                document.getElementById('upload-speed').textContent = 'Error';
+                document.getElementById('ping-speed').textContent = 'Error';
+            } finally {
+                showLoading('speed-loading', false);
+                btn.disabled = false;
+            }
+        }
+
+        async function checkVPN() {
+            const btn = document.getElementById('vpn-test-btn');
+            btn.disabled = true;
+            showLoading('vpn-loading', true);
+            document.getElementById('vpn-status').innerHTML = '';
+
+            try {
+                const vpnServer = document.getElementById('vpn-server').value.trim();
+                const ipRange = document.getElementById('ip-range').value.trim();
+
+                // Get current IP
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                const currentIP = ipData.ip;
+
+                document.getElementById('current-ip').style.display = 'block';
+                document.getElementById('ip-value').textContent = currentIP;
+
+                let statusMessage = '';
+                let statusType = 'info';
+
+                // Check IP range
+                if (ipRange && currentIP.startsWith(ipRange)) {
+                    statusMessage = `✓ VPN Connected<br>IP matches VPN range (${ipRange}*)`;
+                    statusType = 'success';
+                } else if (ipRange) {
+                    statusMessage = `✗ VPN Not Connected<br>IP does not match expected range (${ipRange}*)`;
+                    statusType = 'error';
+                } else {
+                    statusMessage = `Current IP: ${currentIP}<br>No VPN range configured`;
+                    statusType = 'info';
+                }
+
+                // Check server reachability (basic check)
+                if (vpnServer) {
+                    try {
+                        await fetch(`https://${vpnServer}`, { mode: 'no-cors' });
+                        statusMessage += `<br>✓ VPN server is reachable`;
+                    } catch {
+                        statusMessage += `<br>⚠ Cannot verify VPN server`;
+                    }
+                }
+
+                showStatus('vpn-status', statusMessage, statusType);
+            } catch (error) {
+                showStatus('vpn-status', '✗ VPN check failed: ' + error.message, 'error');
+            } finally {
+                showLoading('vpn-loading', false);
+                btn.disabled = false;
+            }
+        }
+
+        async function runFullTest() {
+            const btn = document.getElementById('full-test-btn');
+            btn.disabled = true;
+            showLoading('full-loading', true);
+            document.getElementById('log-box').innerHTML = '';
+            logs = [];
+
+            try {
+                addLog('=== Starting Full Network Diagnostics ===', 'info');
+                addLog('');
+
+                // Speed Test
+                addLog('--- Internet Speed Test ---', 'info');
+                
+                try {
+                    // Ping
+                    const pingStart = performance.now();
+                    await fetch('https://www.google.com', { mode: 'no-cors' });
+                    const ping = Math.round(performance.now() - pingStart);
+                    addLog(`✓ Ping: ${ping} ms`, 'success');
+
+                    // Download
+                    addLog('Testing download speed...', 'info');
+                    const downloadStart = performance.now();
+                    const downloadResponse = await fetch('https://speed.cloudflare.com/__down?bytes=10000000');
+                    const downloadBlob = await downloadResponse.blob();
+                    const downloadTime = (performance.now() - downloadStart) / 1000;
+                    const downloadSpeed = ((downloadBlob.size * 8) / downloadTime / 1000000).toFixed(2);
+                    addLog(`✓ Download: ${downloadSpeed} Mbps`, 'success');
+
+                    // Upload
+                    addLog('Testing upload speed...', 'info');
+                    const uploadData = new Blob([new ArrayBuffer(1000000)]);
+                    const uploadStart = performance.now();
+                    await fetch('https://httpbin.org/post', {
+                        method: 'POST',
+                        body: uploadData
+                    });
+                    const uploadTime = (performance.now() - uploadStart) / 1000;
+                    const uploadSpeed = ((uploadData.size * 8) / uploadTime / 1000000).toFixed(2);
+                    addLog(`✓ Upload: ${uploadSpeed} Mbps`, 'success');
+                } catch (error) {
+                    addLog(`✗ Speed test failed: ${error.message}`, 'error');
+                }
+
+                addLog('');
+
+                // VPN Test
+                addLog('--- VPN Connection Test ---', 'info');
+                
+                try {
+                    const ipResponse = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipResponse.json();
+                    const currentIP = ipData.ip;
+                    addLog(`Current IP: ${currentIP}`, 'info');
+
+                    const vpnServer = document.getElementById('vpn-server').value.trim();
+                    const ipRange = document.getElementById('ip-range').value.trim();
+
+                    if (ipRange && currentIP.startsWith(ipRange)) {
+                        addLog(`✓ IP matches VPN range (${ipRange}*)`, 'success');
+                    } else if (ipRange) {
+                        addLog(`✗ IP does NOT match VPN range (${ipRange}*)`, 'error');
+                    } else {
+                        addLog('No VPN IP range configured', 'warning');
+                    }
+
+                    if (vpnServer) {
+                        try {
+                            await fetch(`https://${vpnServer}`, { mode: 'no-cors', timeout: 5000 });
+                            addLog(`✓ VPN server ${vpnServer} is reachable`, 'success');
+                        } catch {
+                            addLog(`⚠ Cannot verify VPN server ${vpnServer}`, 'warning');
+                        }
+                    } else {
+                        addLog('No VPN server configured', 'warning');
+                    }
+                } catch (error) {
+                    addLog(`✗ VPN check failed: ${error.message}`, 'error');
+                }
+
+                addLog('');
+                addLog('=== Diagnostics Complete ===', 'success');
+            } catch (error) {
+                addLog(`✗ Diagnostics failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('full-loading', false);
+                btn.disabled = false;
+            }
+        }
+
+        function exportResults() {
+            const text = logs.join('\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `network_diagnostics_${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        loadProfiles();
+    </script>
+</body>
+</html> 
